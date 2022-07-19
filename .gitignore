@@ -1,0 +1,17 @@
+.build_cache/
+build/
+dist/
+lib/*.jl
+coverage/
+node_modules/
+.npm
+vv/
+venv/
+.tox
+*.pyc
+*.egg-info
+*.log
+.idea/
+.DS_Store
+dash_core_components_base/plotly.min.js
+Manifest.toml
