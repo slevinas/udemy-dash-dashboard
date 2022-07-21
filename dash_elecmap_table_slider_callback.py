@@ -1,3 +1,4 @@
+import re
 from dash import Dash, html, dcc ,dash_table, Input, Output
 import dash_bootstrap_components as dbc
 import pandas as pd
@@ -14,30 +15,50 @@ electricity = pd.read_csv('~/Downloads/electricity.csv')
 min_year = electricity['Year'].min()
 max_year = electricity['Year'].max()
 
-avg_price_electricity = electricity.groupby('US_State')['Residential Price'].mean().reset_index()
-
-map_fig = px.choropleth(avg_price_electricity,
-                        locations='US_State', locationmode='USA-states',
-                        color='Residential Price', scope='usa',
-                        color_continuous_scale='reds')
-
 
 app = Dash(external_stylesheets=[dbc.themes.SOLAR])
 
 app.layout = html.Div([
     html.H1('Electricity Prices by Us State'),
-    dcc.RangeSlider(id='Year Slider',
+
+    dcc.RangeSlider(id='year-slider',
                     min=min_year,
                     max=max_year,
                     value=[min_year, max_year],
                     marks={i:str(i) for i in range(min_year, max_year + 1)} ),
-    dcc.Graph(id='map-graph', figure=map_fig),
-    dash_table.DataTable(id='price-info', data=avg_price_electricity.to_dict('records'))
+
+    dcc.Graph(id='map-graph'),
+    html.Div(id='click-children'),
+    dash_table.DataTable(id='price-info', data=electricity.to_dict('records'))
     #dash_table.DataTable(id='price-info',data=top10queries.to_dict('records'))
     
                       ])
             
   
+@app.callback(
+    Output('map-graph','figure'),
+    Input('year-slider','value'))
+def update_map(selected_years):
+    filtered_electricity = electricity[(
+        electricity['Year'] >= selected_years[0]) & (electricity['Year'] <= selected_years[1])]
+
+    avg_price_electricity = filtered_electricity.groupby('US_State')['Residential Price'].mean().reset_index()
+
+    map_fig = px.choropleth(avg_price_electricity,
+                            locations='US_State', locationmode='USA-states',
+                            color='Residential Price', scope='usa',
+                            color_continuous_scale='reds')
+    return map_fig
+
+@app.callback(
+    Output('click-children','children'),
+    Input('map-graph','clickData')
+)
+def print_click_data(clicked_data):
+    return str(clicked_data)
+
+
+
 
 
 if __name__ == '__main__':
